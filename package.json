@@ -1,0 +1,1052 @@
+{
+  "name": "cursor-plus",
+  "displayName": "Cursor Plus",
+  "publisher": "TRDev20",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TRDev20/cursor-plus"
+  },
+  "keywords": [
+    "cursor",
+    "CursorPlus",
+    "Cursor Commands"
+  ],
+  "description": "More Cursor Commands To Move Freely/Faster In The Editor",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "icon": "./images/logo.png",
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "cursorPlus.reveal": {
+          "type": "object",
+          "properties": {
+            "offset": {
+              "type": "number",
+              "default": 10,
+              "description": "The minimum number of characters to reveal to the left."
+            },
+            "threshold": {
+              "type": "number",
+              "default": 20,
+              "description": "If cursor position is less than this value, it will reveal from line start."
+            }
+          },
+          "additionalProperties": false,
+          "default": {},
+          "description": "Reveal settings. Used when running a CursorPlus command that moves the cursor."
+        },
+        "cursorPlus.autoInsert": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true,
+              "description": "Enable/Disable auto-select behavior."
+            },
+            "escapeChar": {
+              "type": "string",
+              "default": "/",
+              "description": "Start the text with this character to prevent any auto-select behavior."
+            },
+            "global": {
+              "type": "array",
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "description": "This text will be auto-inserted when typed."
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "description": "This text will be auto-inserted when its alias is typed."
+                      },
+                      "alias": {
+                        "type": "string",
+                        "description": "This alias will be typed to trigger the auto-insert."
+                      }
+                    },
+                    "required": [
+                      "text",
+                      "alias"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "default": [],
+              "description": "Texts to auto-select for all insert commands."
+            },
+            "lineStart": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.lineStart` command."
+            },
+            "textStart": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.textStart` command."
+            },
+            "textEnd": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.textEnd` command."
+            },
+            "lineEnd": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.lineEnd` command."
+            },
+            "upLineStart": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.upLineStart` command."
+            },
+            "upTextStart": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.upTextStart` command."
+            },
+            "upTextEnd": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.upTextEnd` command."
+            },
+            "upLineEnd": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.upLineEnd` command."
+            },
+            "downLineStart": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.downLineStart` command."
+            },
+            "downTextStart": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.downTextStart` command."
+            },
+            "downTextEnd": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.downTextEnd` command."
+            },
+            "downLineEnd": {
+              "$ref": "#/properties/cursorPlus.autoInsert/properties/global",
+              "description": "Texts to auto-select for `cursorPlus.insert.downLineEnd` command."
+            }
+          },
+          "additionalProperties": false,
+          "default": {},
+          "description": "Auto-select settings. Used when running a `cursorPlus.insert.*` command."
+        },
+        "cursorPlus.savedCommands": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "move",
+              "select",
+              "delete",
+              "insert",
+              "swap",
+              "reorder",
+              "runCommands"
+            ]
+          },
+          "default": [
+            "move",
+            "select"
+          ],
+          "description": "Commands to save so that they can be re-run again using `cursorPlus.last` command.",
+          "uniqueItems": true
+        },
+        "cursorPlus.aliases": {
+          "type": "object",
+          "properties": {
+            "global": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    {
+                      "not": {}
+                    }
+                  ]
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "line": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "text": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "entireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "downEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "lines": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "direction": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "selections": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for all commands.",
+              "default": {}
+            },
+            "move": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textEnd"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineEnd"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextEnd"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineEnd"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextEnd"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineEnd"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for `cursorPlus.move.*` commands.",
+              "default": {}
+            },
+            "insert": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textEnd"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineEnd"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextEnd"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineEnd"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextEnd"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineEnd"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for `cursorPlus.insert.*` commands.",
+              "default": {}
+            },
+            "select": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textEnd"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineEnd"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextEnd"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineEnd"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextEnd"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineEnd"
+                },
+                "line": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/line"
+                },
+                "upLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLine"
+                },
+                "downLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLine"
+                },
+                "text": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upText"
+                },
+                "downText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downText"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for `cursorPlus.select.*` commands.",
+              "default": {}
+            },
+            "delete": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textEnd"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineEnd"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextEnd"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineEnd"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextEnd"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineEnd"
+                },
+                "line": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/line"
+                },
+                "upLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLine"
+                },
+                "downLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLine"
+                },
+                "text": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/select/properties/text"
+                },
+                "upText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upText"
+                },
+                "downText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downText"
+                },
+                "entireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/entireLine"
+                },
+                "upEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upEntireLine"
+                },
+                "downEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downEntireLine"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for `cursorPlus.delete.*` commands.",
+              "default": {}
+            },
+            "swap": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textEnd"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineEnd"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextEnd"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineEnd"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextEnd"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineEnd"
+                },
+                "line": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/line"
+                },
+                "upLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLine"
+                },
+                "downLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLine"
+                },
+                "text": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "upText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upText"
+                },
+                "downText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downText"
+                },
+                "entireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/entireLine"
+                },
+                "upEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upEntireLine"
+                },
+                "downEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downEntireLine"
+                },
+                "lines": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "direction": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/direction"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for `cursorPlus.swap.*` commands.",
+              "default": {}
+            },
+            "reorder": {
+              "type": "object",
+              "properties": {
+                "lineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineStart"
+                },
+                "textStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textStart"
+                },
+                "textEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/textEnd"
+                },
+                "lineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lineEnd"
+                },
+                "upLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineStart"
+                },
+                "upTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextStart"
+                },
+                "upTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upTextEnd"
+                },
+                "upLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLineEnd"
+                },
+                "downLineStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineStart"
+                },
+                "downTextStart": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextStart"
+                },
+                "downTextEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downTextEnd"
+                },
+                "downLineEnd": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLineEnd"
+                },
+                "line": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/line"
+                },
+                "upLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upLine"
+                },
+                "downLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downLine"
+                },
+                "text": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/text"
+                },
+                "upText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upText"
+                },
+                "downText": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downText"
+                },
+                "entireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/entireLine"
+                },
+                "upEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/upEntireLine"
+                },
+                "downEntireLine": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/downEntireLine"
+                },
+                "lines": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/lines"
+                },
+                "direction": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/direction"
+                },
+                "selections": {
+                  "$ref": "#/properties/cursorPlus.aliases/properties/global/properties/selections"
+                }
+              },
+              "additionalProperties": false,
+              "description": "Aliases for `cursorPlus.reorder.*` commands.",
+              "default": {}
+            }
+          },
+          "additionalProperties": false,
+          "default": {},
+          "description": "Aliases settings. Used when running a `cursorPlus.<group>.wrapper` command."
+        },
+        "cursorPlus.hiddenMessages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "config-error"
+            ]
+          },
+          "default": [],
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false,
+      "default": {},
+      "title": "Cursor Plus"
+    },
+    "commands": [
+      {
+        "command": "cursorPlus.move.lineStart",
+        "title": "Move Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.textStart",
+        "title": "Move Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.textEnd",
+        "title": "Move Text End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.lineEnd",
+        "title": "Move Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.upLineStart",
+        "title": "Move Up Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.upTextStart",
+        "title": "Move Up Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.upTextEnd",
+        "title": "Move Up Text End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.upLineEnd",
+        "title": "Move Up Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.downLineStart",
+        "title": "Move Down Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.downTextStart",
+        "title": "Move Down Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.downTextEnd",
+        "title": "Move Down Text End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.downLineEnd",
+        "title": "Move Down Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.move.wrapper",
+        "title": "Move Wrapper",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.lineStart",
+        "title": "Select Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.textStart",
+        "title": "Select Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.textEnd",
+        "title": "Select Text End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.lineEnd",
+        "title": "Select Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.line",
+        "title": "Select Line Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.text",
+        "title": "Select Text Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.upLineStart",
+        "title": "Select Up Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.upTextStart",
+        "title": "Select Up Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.upTextEnd",
+        "title": "Select Up Text End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.upLineEnd",
+        "title": "Select Up Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.upLine",
+        "title": "Select Up Line Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.upText",
+        "title": "Select Up Text Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.downLineStart",
+        "title": "Select Down Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.downTextStart",
+        "title": "Select Down Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.downTextEnd",
+        "title": "Select Down Text End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.downLineEnd",
+        "title": "Select Down Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.downLine",
+        "title": "Select Down Line Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.downText",
+        "title": "Select Down Text Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.select.wrapper",
+        "title": "Select Wrapper",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.lineStart",
+        "title": "Insert Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.textStart",
+        "title": "Insert Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.lineEnd",
+        "title": "Insert Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.upLineStart",
+        "title": "Insert Up Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.upTextStart",
+        "title": "Insert Up Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.upLineEnd",
+        "title": "Insert Up Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.downLineStart",
+        "title": "Insert Down Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.downTextStart",
+        "title": "Insert Down Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.downLineEnd",
+        "title": "Insert Down Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.insert.wrapper",
+        "title": "Insert Wrapper",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.lineStart",
+        "title": "Delete Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.textStart",
+        "title": "Delete Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.lineEnd",
+        "title": "Delete Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.line",
+        "title": "Delete Line Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.entireLine",
+        "title": "Delete Entire Line",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.upEntireLine",
+        "title": "Delete Up Entire Line",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.downEntireLine",
+        "title": "Delete Down Entire Line",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.text",
+        "title": "Delete Text Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.upLineStart",
+        "title": "Delete Up Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.upTextStart",
+        "title": "Delete Up Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.upLineEnd",
+        "title": "Delete Up Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.upLine",
+        "title": "Delete Up Line Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.upText",
+        "title": "Delete Up Text Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.downLineStart",
+        "title": "Delete Down Line Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.downTextStart",
+        "title": "Delete Down Text Start",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.downLineEnd",
+        "title": "Delete Down Line End",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.downLine",
+        "title": "Delete Down Line Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.downText",
+        "title": "Delete Down Text Content",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.delete.wrapper",
+        "title": "Delete Wrapper",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.lastCmd",
+        "title": "Last Command",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.swap.direction",
+        "title": "Swap Direction",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.swap.lines",
+        "title": "Swap Lines",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.swap.linesText",
+        "title": "Swap Lines Text",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.swap.text",
+        "title": "Swap Text",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.reorder.lines",
+        "title": "Reorder Lines",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.reorder.linesText",
+        "title": "Reorder Lines Text",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.reorder.text",
+        "title": "Reorder Text",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.reorder.selections",
+        "title": "Reorder Selections",
+        "category": "Cursor Plus"
+      },
+      {
+        "command": "cursorPlus.runCommands",
+        "title": "Run Commands",
+        "category": "Cursor Plus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "pnpm run check-types && pnpm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "set NODE_ENV=development && node esbuild.js --watch",
+    "watch:tsc": "set NODE_ENV=development && tsc --noEmit --watch --project tsconfig.json",
+    "package": "pnpm run check-types && pnpm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test",
+    "format": "prettier --write .",
+    "gen-pkg-config": "ts-node -r tsconfig-paths/register ./scripts/gen-pkg-config.ts"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.93.0",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.16.0",
+    "fs-extra": "^11.2.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.4.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.2",
+    "zod-to-json-schema": "^3.24.1"
+  },
+  "dependencies": {
+    "@sentry/node": "^8.50.0",
+    "zod": "^3.24.1"
+  }
+}
