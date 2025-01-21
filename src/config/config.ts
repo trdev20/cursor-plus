@@ -44,7 +44,7 @@ export function getConfig(): Config {
   const extConfig = vsc.workspace.getConfiguration(EXT_ID_CAMELCASE);
 
   try {
-    return configSchema.parse(2);
+    return configSchema.parse(extConfig);
   } catch (error) {
     showParseFailMsg({ config: extConfig });
     report({ title: "Failed to parse configuration", config: extConfig, error });
