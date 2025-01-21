@@ -1,6 +1,6 @@
 {
   "name": "cursor-plus",
-  "displayName": "Cursor Plus",
+  "displayName": "CursorPlus",
   "publisher": "TRDev20",
   "repository": {
     "type": "git",
@@ -12,7 +12,7 @@
     "Cursor Commands"
   ],
   "description": "More Cursor Commands To Move Freely/Faster In The Editor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.93.0"
   },
